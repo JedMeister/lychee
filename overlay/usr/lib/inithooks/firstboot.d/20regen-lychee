@@ -1,0 +1,11 @@
+#!/bin/bash -e
+# regenerate lychee mysql password
+
+. /etc/default/inithooks
+
+CONF=/var/www/lychee/data/config.php
+
+PASSWORD=$(mcookie)
+sed -i "s|dbPassword.*;|dbPassword = '$PASSWORD';|" $CONF
+$INITHOOKS_PATH/bin/mysqlconf.py --user=lychee --pass="$PASSWORD"
+

@@ -1,6 +1,56 @@
 #!/bin/sh -ex
 
-#ensure datafiles (eg. innodb) are created
-/etc/init.d/mysql start
-/etc/init.d/mysql stop
+ADMIN_USER=admin
+ADMIN_PASS=turnkey
 
+DB_NAME=lychee
+DB_USER=lychee
+DB_PASS=$(mcookie)
+
+WEBROOT=/var/www/lychee
+
+git clone --depth 1 https://github.com/electerious/Lychee.git $WEBROOT
+
+chown -R www-data:www-data $WEBROOT/uploads/ $WEBROOT/data/
+
+a2ensite lychee
+a2dissite 000-default
+
+# convenience execution variables
+MYSQL_BATCH="mysql --user=root --password=$MYSQL_PASS --batch"
+MYSQL_ADMIN="mysqladmin --user=root --password=$MYSQL_PASS"
+
+# start mysql & apache servers
+service mysql start
+service apache2 start
+
+# create database
+$MYSQL_ADMIN create $DB_NAME
+
+# create database user with privileges on the database
+$MYSQL_BATCH --execute "grant all privileges on $DB_NAME.* to $DB_USER@localhost identified by '$DB_PASS';"
+
+CONF=$WEBROOT/data/config.php
+cat > $CONF << EOF
+<?php
+
+// Database configuration
+\$dbHost = 'localhost'; // Host of the database
+\$dbUser = 'lychee'; // Username of the database
+\$dbPassword = '$DB_PASS'; // Password of the database
+\$dbName = 'lychee'; // Database name
+\$dbTablePrefix = ''; // Table prefix
+
+?>
+EOF
+
+curl http://127.0.0.1/
+
+# Username is hashed in DB; set it to "admin"
+ADMIN_USER_HASH='$10$UVB/fxRSv70tSu5JHUwfEO1h95INukloFc31o5OsY1HyXQY6W1vJm'
+$MYSQL_BATCH --execute "update $DB_NAME.lychee_settings SET `value`=\"$ADMIN_USER_HASH\" WHERE `key`="username";'
+
+/usr/lib/inithooks/bin/lychee.py --pass=$(mcookie)
+
+service apache2 stop
+service mysql stop

@@ -1,3 +1,6 @@
 #include <turnkey/base>
 #include <turnkey/lamp>
 
+php5-json
+php5-gd
+
