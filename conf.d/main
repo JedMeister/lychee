@@ -48,7 +48,7 @@ curl http://127.0.0.1/
 
 # Username is hashed in DB; set it to "admin"
 ADMIN_USER_HASH='$10$UVB/fxRSv70tSu5JHUwfEO1h95INukloFc31o5OsY1HyXQY6W1vJm'
-$MYSQL_BATCH --execute "update $DB_NAME.lychee_settings SET `value`=\"$ADMIN_USER_HASH\" WHERE `key`="username";'
+$MYSQL_BATCH --execute "update $DB_NAME.lychee_settings SET `value`=\"$ADMIN_USER_HASH\" WHERE `key`=\"username\";"
 
 /usr/lib/inithooks/bin/lychee.py --pass=$(mcookie)
 
